@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>work_files アップロードテスト</title>
+</head>
+<body>
+  <h1>work_files アップロードテスト</h1>
+
+  <!-- ログインフォーム -->
+  <section>
+    <h2>ログイン</h2>
+    <label>
+      メールアドレス:
+      <input type="email" id="email" autocomplete="email">
+    </label>
+    <br>
+    <label>
+      パスワード:
+      <input type="password" id="password" autocomplete="current-password">
+    </label>
+    <br>
+    <button id="loginBtn">ログイン</button>
+    <div id="loginStatus"></div>
+  </section>
+
+  <hr>
+
+  <!-- アップロードフォーム -->
+  <section>
+    <h2>ファイルアップロード</h2>
+
+    <label>
+      work_id:
+      <input type="text" id="workId" size="40" placeholder="worksテーブルのid(uuid)">
+    </label>
+    <br><br>
+
+    <label>
+      ファイル:
+      <input type="file" id="fileInput" multiple>
+    </label>
+    <br><br>
+
+    <!-- 必要なら追々使う用のメタ情報（今は空でもOK） -->
+    <label>
+      work_category_id（任意）:
+      <input type="number" id="workCategoryId">
+    </label>
+    <br>
+    <label>
+      default_phase_id（任意）:
+      <input type="number" id="defaultPhaseId">
+    </label>
+    <br>
+    <label>
+      default_caption（任意）:
+      <input type="text" id="defaultCaption" size="40">
+    </label>
+    <br>
+    <label>
+      default_note（任意）:
+      <input type="text" id="defaultNote" size="60">
+    </label>
+    <br><br>
+
+    <button id="uploadBtn">アップロード</button>
+    <div id="uploadStatus"></div>
+  </section>
+
+  <hr>
+
+  <h2>レスポンス</h2>
+  <pre id="responseBox" style="background:#f5f5f5; padding:8px; max-height:300px; overflow:auto;"></pre>
+
+  <!-- supabase-js v2 UMD -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // ★ここを書き換えて使う
+    const SUPABASE_URL = "https://xxxxxxxx.supabase.co";
+    const SUPABASE_ANON_KEY = "xxxxxxxxxxxxxxxxxxxxxxxx";
+    const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/upload_work_files";
+
+    const { createClient } = supabase;
+    const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let accessToken = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    // ログイン処理
+    $("loginBtn").addEventListener("click", async () => {
+      const email = $("email").value.trim();
+      const password = $("password").value;
+
+      $("loginStatus").textContent = "ログイン中...";
+      try {
+        const { data, error } = await supa.auth.signInWithPassword({ email, password });
+        if (error) {
+          console.error(error);
+          $("loginStatus").textContent = "ログイン失敗: " + error.message;
+          accessToken = null;
+          return;
+        }
+
+        accessToken = data.session?.access_token || null;
+        $("loginStatus").textContent = accessToken ? "ログイン成功" : "ログイン成功（トークン無し？）";
+      } catch (e) {
+        console.error(e);
+        $("loginStatus").textContent = "ログイン中にエラー: " + e;
+      }
+    });
+
+    // アップロード処理
+    $("uploadBtn").addEventListener("click", async () => {
+      const workId = $("workId").value.trim();
+      const files = $("fileInput").files;
+
+      $("uploadStatus").textContent = "";
+      $("responseBox").textContent = "";
+
+      if (!accessToken) {
+        $("uploadStatus").textContent = "先にログインしてください";
+        return;
+      }
+      if (!workId) {
+        $("uploadStatus").textContent = "work_id を入力してください";
+        return;
+      }
+      if (!files || files.length === 0) {
+        $("uploadStatus").textContent = "ファイルを選択してください";
+        return;
+      }
+
+      const workCategoryId = $("workCategoryId").value.trim();
+      const defaultPhaseId = $("defaultPhaseId").value.trim();
+      const defaultCaption = $("defaultCaption").value.trim();
+      const defaultNote = $("defaultNote").value.trim();
+
+      const form = new FormData();
+      form.append("work_id", workId);
+
+      if (workCategoryId) form.append("work_category_id", workCategoryId);
+      if (defaultPhaseId) form.append("default_phase_id", defaultPhaseId);
+      if (defaultCaption) form.append("default_caption", defaultCaption);
+      if (defaultNote) form.append("default_note", defaultNote);
+
+      // 複数ファイル対応（Edge側で file or files[] 両方見ているなら揃えて）
+      for (const f of files) {
+        form.append("files", f);
+      }
+
+      $("uploadStatus").textContent = "アップロード中...";
+
+      try {
+        const res = await fetch(EDGE_FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + accessToken,
+            // Content-Type は FormData に任せるので書かない
+          },
+          body: form,
+        });
+
+        const text = await res.text();
+        $("responseBox").textContent = text;
+
+        if (!res.ok) {
+          $("uploadStatus").textContent = "アップロード失敗: HTTP " + res.status;
+        } else {
+          $("uploadStatus").textContent = "アップロード成功";
+        }
+      } catch (e) {
+        console.error(e);
+        $("uploadStatus").textContent = "アップロード中にエラー: " + e;
+      }
+    });
+  </script>
+</body>
+</html>
