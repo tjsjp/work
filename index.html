@@ -49,7 +49,7 @@
     </label>
     <br>
     <label>
-      default_work_phase_id（任意）:
+      default_phase_id（任意）:
       <input type="number" id="defaultPhaseId">
     </label>
     <br>
@@ -67,24 +67,26 @@
     <button id="uploadBtn">アップロード</button>
     <div id="uploadStatus"></div>
   </section>
-<br><br>
-<button id="listBtn">この work_id のファイル一覧取得</button>
-<div id="listStatus"></div>
 
-<hr>
+  <br><br>
+  <button id="listBtn">この work_id のファイル一覧取得</button>
+  <div id="listStatus"></div>
 
-<section>
-  <h2>プレビュー（file_id 指定）</h2>
-  <label>
-    file_id:
-    <input type="text" id="previewFileId" size="50">
-  </label>
-  <button id="previewBtn">URL取得 & プレビュー</button>
-  <div id="previewStatus"></div>
-  <div>
-    <img id="previewImage" style="max-width: 400px; max-height: 400px; border:1px solid #ccc; margin-top:8px;">
-  </div>
-</section>
+  <hr>
+
+  <section>
+    <h2>プレビュー（file_id 指定）</h2>
+    <label>
+      file_id:
+      <input type="text" id="previewFileId" size="50">
+    </label>
+    <button id="previewBtn">URL取得 & プレビュー</button>
+    <div id="previewStatus"></div>
+    <div>
+      <img id="previewImage" style="max-width: 400px; max-height: 400px; border:1px solid #ccc; margin-top:8px;">
+    </div>
+  </section>
+
   <hr>
 
   <h2>レスポンス</h2>
@@ -93,12 +95,13 @@
   <!-- supabase-js v2 UMD -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // ★ここを書き換えて使う
     const SUPABASE_URL = "https://vtdhftukofbtxavnzlhv.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0ZGhmdHVrb2ZidHhhdm56bGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MjMzNjksImV4cCI6MjA3NzE5OTM2OX0.FheY0dsJgtL7xwUNZojF9HQM6zYKHmTv5iC3FAGSVmg";
-const EDGE_FUNCTION_URL_UPLOAD = SUPABASE_URL + "/functions/v1/upload_work_file";
-const EDGE_FUNCTION_URL_LIST   = SUPABASE_URL + "/functions/v1/work_file_list";
-const EDGE_FUNCTION_URL_SIGNED = SUPABASE_URL + "/functions/v1/get_work_file_url";
+
+    // Edge Function のエンドポイント（関数名と合わせる）
+    const EDGE_FUNCTION_URL_UPLOAD = SUPABASE_URL + "/functions/v1/upload_work_file";
+    const EDGE_FUNCTION_URL_LIST   = SUPABASE_URL + "/functions/v1/work_file_list";
+    const EDGE_FUNCTION_URL_SIGNED = SUPABASE_URL + "/functions/v1/get_work_file_url";
 
     const { createClient } = supabase;
     const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -160,11 +163,11 @@ const EDGE_FUNCTION_URL_SIGNED = SUPABASE_URL + "/functions/v1/get_work_file_url
       form.append("work_id", workId);
 
       if (workCategoryId) form.append("work_category_id", workCategoryId);
-      if (defaultPhaseId) form.append("default_work_phase_id", defaultPhaseId);
+      // ★ Edge Function 側は default_phase_id を見ている想定
+      if (defaultPhaseId) form.append("default_phase_id", defaultPhaseId);
       if (defaultCaption) form.append("default_caption", defaultCaption);
       if (defaultNote) form.append("default_note", defaultNote);
 
-      // 複数ファイル対応（Edge側で file or files[] 両方見ているなら揃えて）
       for (const f of files) {
         form.append("files", f);
       }
@@ -176,7 +179,6 @@ const EDGE_FUNCTION_URL_SIGNED = SUPABASE_URL + "/functions/v1/get_work_file_url
           method: "POST",
           headers: {
             Authorization: "Bearer " + accessToken,
-            // Content-Type は FormData に任せるので書かない
           },
           body: form,
         });
@@ -194,48 +196,92 @@ const EDGE_FUNCTION_URL_SIGNED = SUPABASE_URL + "/functions/v1/get_work_file_url
         $("uploadStatus").textContent = "アップロード中にエラー: " + e;
       }
     });
-$("previewBtn").addEventListener("click", async () => {
-  const fileId = $("previewFileId").value.trim();
-  $("previewStatus").textContent = "";
-  $("previewImage").src = "";
 
-  if (!accessToken) {
-    $("previewStatus").textContent = "先にログインしてください";
-    return;
-  }
-  if (!fileId) {
-    $("previewStatus").textContent = "file_id を入力してください";
-    return;
-  }
+    // 一覧取得
+    $("listBtn").addEventListener("click", async () => {
+      const workId = $("workId").value.trim();
+      $("listStatus").textContent = "";
+      $("responseBox").textContent = "";
 
-  $("previewStatus").textContent = "signed URL 取得中...";
+      if (!accessToken) {
+        $("listStatus").textContent = "先にログインしてください";
+        return;
+      }
+      if (!workId) {
+        $("listStatus").textContent = "work_id を入力してください";
+        return;
+      }
 
-  try {
-    const res = await fetch(EDGE_FUNCTION_URL_SIGNED + "?file_id=" + encodeURIComponent(fileId), {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + accessToken,
-      },
+      $("listStatus").textContent = "一覧取得中...";
+
+      try {
+        const res = await fetch(
+          EDGE_FUNCTION_URL_LIST + "?work_id=" + encodeURIComponent(workId),
+          {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + accessToken,
+            },
+          }
+        );
+
+        const text = await res.text();
+        $("responseBox").textContent = text;
+
+        if (!res.ok) {
+          $("listStatus").textContent = "一覧取得失敗: HTTP " + res.status;
+        } else {
+          $("listStatus").textContent = "一覧取得成功（下のレスポンスを確認）";
+        }
+      } catch (e) {
+        console.error(e);
+        $("listStatus").textContent = "一覧取得中にエラー: " + e;
+      }
     });
 
-    const json = await res.json();
-    $("responseBox").textContent = JSON.stringify(json, null, 2);
+    // プレビュー（signed URL 発行）
+    $("previewBtn").addEventListener("click", async () => {
+      const fileId = $("previewFileId").value.trim();
+      $("previewStatus").textContent = "";
+      $("previewImage").src = "";
 
-    if (!res.ok || json.error) {
-      $("previewStatus").textContent = "取得失敗: " + (json.error || ("HTTP " + res.status));
-      return;
-    }
+      if (!accessToken) {
+        $("previewStatus").textContent = "先にログインしてください";
+        return;
+      }
+      if (!fileId) {
+        $("previewStatus").textContent = "file_id を入力してください";
+        return;
+      }
 
-    $("previewStatus").textContent = "取得成功";
-    $("previewImage").src = json.signed_url;
-  } catch (e) {
-    console.error(e);
-    $("previewStatus").textContent = "取得中にエラー: " + e;
-  }
-});
+      $("previewStatus").textContent = "signed URL 取得中...";
 
+      try {
+        const res = await fetch(
+          EDGE_FUNCTION_URL_SIGNED + "?file_id=" + encodeURIComponent(fileId),
+          {
+            method: "GET",
+            headers: {
+              Authorization: "Bearer " + accessToken,
+            },
+          }
+        );
 
+        const json = await res.json();
+        $("responseBox").textContent = JSON.stringify(json, null, 2);
 
+        if (!res.ok || json.error) {
+          $("previewStatus").textContent = "取得失敗: " + (json.error || ("HTTP " + res.status));
+          return;
+        }
+
+        $("previewStatus").textContent = "取得成功";
+        $("previewImage").src = json.signed_url;
+      } catch (e) {
+        console.error(e);
+        $("previewStatus").textContent = "取得中にエラー: " + e;
+      }
+    });
   </script>
 </body>
 </html>
