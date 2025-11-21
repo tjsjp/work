@@ -79,7 +79,7 @@
     // ★ここを書き換えて使う
     const SUPABASE_URL = "https://vtdhftukofbtxavnzlhv.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ0ZGhmdHVrb2ZidHhhdm56bGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE2MjMzNjksImV4cCI6MjA3NzE5OTM2OX0.FheY0dsJgtL7xwUNZojF9HQM6zYKHmTv5iC3FAGSVmg";
-    const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/upload_work_files";
+    const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/upload_work_file";
 
     const { createClient } = supabase;
     const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
