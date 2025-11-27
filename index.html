@@ -87,6 +87,11 @@
     </div>
   </section>
 
+<section>
+  <h2>PDF生成テスト</h2>
+  <button id="pdfBtn">PDF生成（A4サンプル）</button>
+  <div id="pdfStatus"></div>
+</section>
   <hr>
 
   <h2>レスポンス</h2>
@@ -282,6 +287,42 @@
         $("previewStatus").textContent = "取得中にエラー: " + e;
       }
     });
+    const EDGE_FUNCTION_URL_PDF = SUPABASE_URL + "/functions/v1/pdf_a4_sample";
+
+// PDF生成（ログイン済みトークン使用）
+$("pdfBtn").addEventListener("click", async () => {
+  $("pdfStatus").textContent = "";
+
+  if (!accessToken) {
+    $("pdfStatus").textContent = "先にログインしてください";
+    return;
+  }
+
+  $("pdfStatus").textContent = "PDF生成中...";
+
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL_PDF, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + accessToken,
+      },
+    });
+
+    if (!res.ok) {
+      $("pdfStatus").textContent = "PDF取得失敗: HTTP " + res.status;
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    $("pdfStatus").textContent = "PDF生成成功（別タブで表示）";
+    window.open(url, "_blank");
+  } catch (e) {
+    console.error(e);
+    $("pdfStatus").textContent = "PDF生成中にエラー: " + e;
+  }
+});
   </script>
 </body>
 </html>
