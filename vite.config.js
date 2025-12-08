@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   
   // GitHub Pages用のベースパス（リポジトリ名に合わせて変更）
-  base: '/supabasu_with_wasbabi/',
+  base: '/work/',
   
   build: {
     outDir: 'dist',
