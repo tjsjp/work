@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Files SPA</title>
+  <!-- faviconの404エラーを防ぐため、空のfaviconを指定 -->
+  <link rel="icon" href="data:,">
+  <script>
+    // GitHub Pages SPA リダイレクト処理
+    (function() {
+      var redirect = new URLSearchParams(window.location.search).get('redirect');
+      if (redirect) {
+        // redirect パラメータがある場合、履歴を置き換え
+        var basePath = '/';
+        
+        // redirectパラメータをクエリから削除
+        var params = new URLSearchParams(window.location.search);
+        params.delete('redirect');
+        var remainingQuery = params.toString();
+        var queryString = remainingQuery ? '?' + remainingQuery : '';
+        
+        history.replaceState(null, null, basePath + redirect + queryString);
+      }
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/js/index-DuyyCUBB.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/css/index-BfV_185U.css">
+</head>
+<body>
+  <div id="app"></div>
+  <!-- Supabaseクライアントをグローバルに公開（開発用） -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</body>
+</html>
+
+

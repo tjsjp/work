@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script>
+    // GitHub Pages SPA リダイレクトハック
+    // 404ページが読み込まれたら、パスをクエリパラメータとして保存してルートにリダイレクト
+    (function() {
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      
+      // GitHub Pagesのベースパス（ルートデプロイ）
+      var basePath = '/';
+      
+      // パスが空の場合はルートへ
+      if (!path || path === '/') {
+        window.location.replace(basePath);
+        return;
+      }
+      
+      // ルートにリダイレクトし、元のパスを redirect パラメータとして保存
+      var redirect = path + search + hash;
+      window.location.replace(
+        basePath + '?redirect=' + encodeURIComponent(redirect)
+      );
+    })();
+  </script>
+</head>
+<body>
+  <p>リダイレクト中...</p>
+</body>
+</html>
+
