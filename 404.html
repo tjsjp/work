@@ -12,8 +12,13 @@
       var search = window.location.search;
       var hash = window.location.hash;
       
-      // GitHub Pagesのベースパス（ルートデプロイ）
-      var basePath = '/';
+      // GitHub Pagesのベースパス
+      var basePath = '/work/';
+      
+      // ベースパスを除去
+      if (path.startsWith(basePath)) {
+        path = path.substring(basePath.length);
+      }
       
       // パスが空の場合はルートへ
       if (!path || path === '/') {
