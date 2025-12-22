@@ -2,10 +2,19 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>工事管理App</title>
   <!-- faviconの404エラーを防ぐため、空のfaviconを指定 -->
   <link rel="icon" href="data:,">
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#f3f4f6">
+  <!-- iOS: Add to Home Screen（standalone起動でアドレスバー非表示） -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="工事管理App">
+  <!-- iOS用アイコン（PNG推奨。ひとまずSVGを同梱） -->
+  <link rel="apple-touch-icon" href="./pwa-icon.svg">
   <script>
     // GitHub Pages SPA リダイレクト処理
     (function() {
@@ -24,9 +33,9 @@
       }
     })();
   </script>
-  <script type="module" crossorigin src="/work/assets/js/index-CHt6abbp.js"></script>
-  <link rel="stylesheet" crossorigin href="/work/assets/css/index-B3mSVFmm.css">
-</head>
+  <script type="module" crossorigin src="/work/assets/js/index-DSEm9gaM.js"></script>
+  <link rel="stylesheet" crossorigin href="/work/assets/css/index-TCQGQL5q.css">
+<link rel="manifest" href="/work/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/work/registerSW.js"></script></head>
 <body>
   <div id="app"></div>
   <!-- Supabaseクライアントをグローバルに公開（開発用） -->
